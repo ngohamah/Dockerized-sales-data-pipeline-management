@@ -1,0 +1,42 @@
+# --- Project planning / brief docs (kept local only) ---
+implementationmap.md
+Mini-Data-Platform.md
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Logs ---
+logs/
+*.log
+
+# --- Docker / service volumes ---
+volumes/
+pg_data/
+minio_data/
+airflow_data/
+docker-compose.override.yml
+
+# --- Airflow runtime ---
+airflow/logs/
+airflow/airflow.db
+airflow/airflow.cfg
+airflow/webserver_config.py
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
