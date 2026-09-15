@@ -1,7 +1,6 @@
 # Mini Data Platform (Dockerized)
 
-![CI/CD](https://github.com/<OWNER>/<REPO>/actions/workflows/main.yml/badge.svg)
-<!-- Replace <OWNER>/<REPO> once this repo is pushed to GitHub. -->
+![CI/CD](https://github.com/ngohamah/Dockerized-sales-data-pipeline-management/actions/workflows/main.yml/badge.svg)
 
 A small, self-contained data platform that shows the full data lifecycle —
 **collection → processing → storage → visualization** — running entirely in
@@ -69,9 +68,11 @@ Docker containers.
    - Database: `app_data`
    - Username/Password: from `.env`
 
-   From there, build a dashboard on the `sales_records` table — e.g. revenue
+   From there, we built a dashboard on the `sales_records` table — e.g. revenue
    over time, orders by category — with clear chart titles and labeled axes
    so it reads well for a non-technical audience.
+
+   ![Metabase dashboard](reports/metabase-dashboard.png)
 
 ## Running tests and lint locally
 
@@ -100,6 +101,7 @@ on every push.
 ├── transform/           # Pure cleaning/validation functions, shared by the DAG and tests
 ├── config/               # constants.py, logging setup, Postgres init script, Airflow Dockerfile
 ├── tests/                # pytest unit tests
+├── reports/              # dashboard screenshots and other reporting artifacts
 ├── logs/                 # gitignored — app-level logs (data_generator.log, pipeline.log)
 ├── docker-compose.yml    # Platform orchestration
 ├── requirements.txt
