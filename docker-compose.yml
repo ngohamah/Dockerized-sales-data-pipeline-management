@@ -48,7 +48,7 @@ services:
       - platform-net
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: dem12-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -70,7 +70,7 @@ services:
 
   # One-shot: creates the `raw-data` bucket the generator/DAG use, then exits.
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     container_name: dem12-minio-init
     depends_on:
       minio:
@@ -94,13 +94,9 @@ services:
       - -c
       - |
         airflow db migrate
-        airflow users create \
-          --username "$$AIRFLOW_ADMIN_USER" \
-          --password "$$AIRFLOW_ADMIN_PASSWORD" \
-          --firstname Admin \
-          --lastname User \
-          --role Admin \
-          --email admin@example.com || true
+        if ! airflow users list | grep -q "${AIRFLOW_ADMIN_USER}"; then
+          airflow users create --username "${AIRFLOW_ADMIN_USER}" --firstname Admin --lastname User --email admin@example.com --password "${AIRFLOW_ADMIN_PASSWORD}" --role Admin
+        fi
     environment:
       <<: *airflow-common-env
       AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER}
@@ -160,9 +156,6 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - ./logs:/app/logs
-    depends_on:
-      minio-init:
-        condition: service_completed_successfully
     networks:
       - platform-net
 
