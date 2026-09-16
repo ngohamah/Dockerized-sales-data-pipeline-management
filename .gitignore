@@ -40,3 +40,6 @@ airflow/webserver_config.py
 .DS_Store
 .idea/
 .vscode/
+
+# --- Claude Code local session state ---
+.claude/

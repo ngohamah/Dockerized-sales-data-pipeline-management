@@ -105,9 +105,6 @@ def sales_pipeline():
     @task
     def load_to_postgres(payload: dict) -> str:
         records, key = payload["records"], payload["key"]
-        if not records:
-            logger.warning("No valid records to load from %s", key)
-            return key
 
         engine = _postgres_engine()
         try:
@@ -128,6 +125,9 @@ def sales_pipeline():
                         """
                     )
                 )
+                if not records:
+                    logger.warning("No valid records to load from %s", key)
+                    return key
                 for record in records:
                     conn.execute(
                         text(

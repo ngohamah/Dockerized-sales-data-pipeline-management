@@ -104,13 +104,24 @@ jobs:
       - name: Unpause and trigger the sales_pipeline DAG
         run: |
           docker compose exec -T airflow-webserver airflow dags unpause sales_pipeline
-          docker compose exec -T airflow-webserver airflow dags trigger sales_pipeline
+          trigger_output=$(docker compose exec -T airflow-webserver airflow dags trigger sales_pipeline -o plain)
+          echo "$trigger_output"
+          run_id=$(echo "$trigger_output" | grep -oE 'manual__[0-9T:+-]+' | head -n1)
+          if [ -z "$run_id" ]; then
+            echo "Could not extract run_id from trigger output"; exit 1
+          fi
+          echo "Triggered run: $run_id"
+          echo "SALES_PIPELINE_LOGICAL_DATE=${run_id#manual__}" >> "$GITHUB_ENV"
 
       - name: Wait for the DAG run to finish
         run: |
+          # Poll the specific run we triggered by logical_date, not "the last row of
+          # list-runs" — that output is sorted newest-first, so tail-based parsing
+          # was silently checking an unrelated (often older, auto-scheduled) run.
           for i in $(seq 1 60); do
             state=$(docker compose exec -T airflow-webserver \
-              airflow dags list-runs -d sales_pipeline -o plain | tail -n 1 | awk '{print $3}')
+              airflow dags state sales_pipeline "$SALES_PIPELINE_LOGICAL_DATE" 2>/dev/null | tr -d '\r\n')
+            echo "Poll $i: state=$state"
             [ "$state" = "success" ] && exit 0
             [ "$state" = "failed" ] && { echo "DAG run failed"; exit 1; }
             sleep 10
