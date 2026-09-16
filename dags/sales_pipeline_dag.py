@@ -59,6 +59,7 @@ def _postgres_engine():
     schedule="*/10 * * * *",
     start_date=datetime(2024, 1, 1),
     catchup=False,
+    max_active_runs=1,
     default_args=default_args,
     tags=["mini-data-platform"],
 )

@@ -101,8 +101,10 @@ jobs:
       - name: Run data generator once (populates MinIO)
         run: docker compose run --rm data-generator
 
-      - name: Trigger the sales_pipeline DAG
-        run: docker compose exec -T airflow-webserver airflow dags trigger sales_pipeline
+      - name: Unpause and trigger the sales_pipeline DAG
+        run: |
+          docker compose exec -T airflow-webserver airflow dags unpause sales_pipeline
+          docker compose exec -T airflow-webserver airflow dags trigger sales_pipeline
 
       - name: Wait for the DAG run to finish
         run: |
