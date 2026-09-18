@@ -56,7 +56,7 @@ def _postgres_engine():
 @dag(
     dag_id="sales_pipeline",
     description="MinIO (raw CSV) -> clean -> Postgres app_data",
-    schedule="*/10 * * * *",
+    schedule="* * * * *",
     start_date=datetime(2024, 1, 1),
     catchup=False,
     max_active_runs=1,
@@ -65,7 +65,7 @@ def _postgres_engine():
 )
 def sales_pipeline():
     @task
-    def sense_new_file() -> str:
+    def sense_new_files() -> list[str]:
         client = _minio_client()
         try:
             response = client.list_objects_v2(Bucket=constants.RAW_BUCKET, Prefix=constants.RAW_PREFIX)
@@ -75,9 +75,8 @@ def sales_pipeline():
             if not keys:
                 logger.info("No new files found under s3://%s/%s", constants.RAW_BUCKET, constants.RAW_PREFIX)
                 raise AirflowSkipException("No new files to process")
-            key = keys[0]
-            logger.info("Detected new file: %s", key)
-            return key
+            logger.info("Detected %d new file(s): %s", len(keys), keys)
+            return keys
         except (BotoCoreError, ClientError) as exc:
             logger.error("Failed to list MinIO objects: %s", exc, exc_info=True)
             raise
@@ -170,10 +169,10 @@ def sales_pipeline():
         finally:
             client.close()
 
-    sensed_key = sense_new_file()
-    transformed = transform_file(sensed_key)
-    loaded_key = load_to_postgres(transformed)
-    archive_file(loaded_key)
+    sensed_keys = sense_new_files()
+    transformed = transform_file.expand(key=sensed_keys)
+    loaded_keys = load_to_postgres.expand(payload=transformed)
+    archive_file.expand(key=loaded_keys)
 
 
 sales_pipeline()
