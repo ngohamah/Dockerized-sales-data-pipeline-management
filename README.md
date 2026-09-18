@@ -9,7 +9,7 @@ Docker containers.
 ## What it does, in plain terms
 
 1. A **data generator** creates fake sales orders (customer, product, amount, date) and drops them as a CSV file into **MinIO** (an S3-compatible file store).
-2. An **Airflow** pipeline notices the new file, cleans it up (removes bad or duplicate rows), and loads the good rows into a **PostgreSQL** database.
+2. An **Airflow** pipeline checks MinIO every minute, cleans up (removes bad or duplicate rows) every new file it finds, and loads the good rows into a **PostgreSQL** database.
 3. **Metabase** connects to that database and turns the data into charts anyone can read — revenue over time, orders by category, and so on.
 
 ```
@@ -54,7 +54,8 @@ Docker containers.
    docker compose run --rm data-generator
    ```
 4. Open **Airflow** at http://localhost:8080 (login from `.env`). The
-   `sales_pipeline` DAG runs every 10 minutes on its own, or trigger it
+   `sales_pipeline` DAG polls MinIO every minute and, in a single run,
+   processes every new file it finds (not just one), or trigger it
    immediately:
    ```bash
    docker compose exec airflow-webserver airflow dags trigger sales_pipeline
@@ -68,9 +69,20 @@ Docker containers.
    - Database: `app_data`
    - Username/Password: from `.env`
 
-   From there, we built a dashboard on the `sales_records` table — e.g. revenue
-   over time, orders by category — with clear chart titles and labeled axes
-   so it reads well for a non-technical audience.
+   Its own app database (dashboards, questions, users) is persisted to the
+   `metabase_data` volume via `MB_DB_FILE`, so — like Postgres and MinIO —
+   it survives `docker compose down`/`up` instead of resetting.
+
+   From there, we built a **Sales Record** dashboard on the `sales_records`
+   table: Total Revenue, Total Orders, and Transactions in the Last 30 Days
+   at a glance, plus Revenue Over Time, Sales per State, Average Quantity
+   per Month, Revenue by Region, Orders by Category, and Total Spent by
+   Customer — with clear chart titles and labeled axes so it reads well for
+   a non-technical audience.
+
+   Append `#refresh=60` to the dashboard's URL (e.g.
+   `http://localhost:3000/dashboard/2-sales-record#refresh=60`) to have it
+   auto-refresh every minute, in step with the pipeline.
 
    ![Metabase dashboard](reports/metabase-dashboard.png)
 
