@@ -134,6 +134,8 @@ services:
     image: metabase/metabase:latest
     container_name: dem12-metabase
     restart: unless-stopped
+    environment:
+      MB_DB_FILE: /metabase-data/metabase.db
     volumes:
       - metabase_data:/metabase-data
     ports:
