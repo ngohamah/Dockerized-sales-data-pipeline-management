@@ -2,12 +2,12 @@ name: CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch: {}
   schedule:
-    - cron: "0 3 * * *"
+    # - cron: "0 3 * * *"  
 
 jobs:
   lint:

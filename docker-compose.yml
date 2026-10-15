@@ -48,8 +48,11 @@ services:
     networks:
       - platform-net
 
+  # MinIO stopped publishing public images (quay.io/minio/* now needs auth),
+  # so use Airbyte's public mirror of the official build. It has no curl,
+  # hence the `mc ready` healthcheck.
   minio:
-    image: quay.io/minio/minio:latest
+    image: airbyte/minio:RELEASE.2023-11-20T22-40-07Z
     container_name: dem12-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -62,7 +65,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -71,7 +74,7 @@ services:
 
   # One-shot: creates the `raw-data` bucket the generator/DAG use, then exits.
   minio-init:
-    image: quay.io/minio/mc:latest
+    image: airbyte/mc:latest
     container_name: dem12-minio-init
     depends_on:
       minio:
